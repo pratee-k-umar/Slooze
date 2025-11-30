@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Backend API
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - '4000:4000'
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=4000
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  # Frontend
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - NEXT_PUBLIC_API_URL=http://server:4000
+    restart: unless-stopped
+    depends_on:
+      - server
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
